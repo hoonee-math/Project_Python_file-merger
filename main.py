@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog, scrolledtext
+from tkinter import filedialog, scrolledtext, messagebox, ttk
 import subprocess
 import os
 
@@ -28,9 +28,7 @@ class CMDPowerShellGUI:
             ("파일 트리 구조 출력 (CMD)", self.cmd_tree),
             ("파일 트리 구조 출력 (커스텀 PowerShell)", self.ps_tree_extensions),
             ("파일 트리 구조 출력 (커스텀 CMD)", self.custom_tree),  # 새로운 버튼 추가
-            ("Java 파일 찾기", self.find_java_files),
-            ("Java 파일 병합", self.merge_java_files),
-            ("특정 패턴 제외 파일 찾기", self.exclude_pattern)
+            # ("특정 패턴 제외 파일 찾기", self.exclude_pattern)    # 0921-4-1 주석처리 및 삭제
         ]
 
         # 커스텀 트리 출력시 선택한 확장자만 출력되도록 변경 0921-1-1
@@ -167,37 +165,6 @@ class CMDPowerShellGUI:
 
         return "\n".join(walk(path))
 
-    def find_java_files(self):
-        command = f'powershell "Get-ChildItem -Path \'{self.folder_path.get()}\' -Recurse -Include *.java | Select-Object FullName"'
-        self.run_command(command)
-
-    # def merge_java_files(self):
-    #     output_file = os.path.join(self.folder_path.get(), "merged_java_files.txt")
-    #     command = f'powershell "Get-ChildItem -Path \'{self.folder_path.get()}\' -Recurse -Include *.java | ForEach-Object {{ \\"# $($_)\\"; Get-Content $_.FullName -Encoding UTF8 ; \\"\\" }} | Set-Content \'{output_file}\'"; echo "Merged files saved to {output_file}"'
-    #
-    #     self.run_command(command)
-
-    def merge_java_files(self):
-        output_file = os.path.join(self.folder_path.get(), "merged_java_files.txt")
-        encoding = 'utf-8'  # 기본 인코딩 설정
-
-        try:
-            with open(output_file, 'w', encoding=encoding) as outfile:
-                for root, dirs, files in os.walk(self.folder_path.get()):
-                    for file in files:
-                        if file.endswith('.java'):
-                            file_path = os.path.join(root, file)
-                            outfile.write(f"# {file_path}\n")
-                            with open(file_path, 'r', encoding=encoding) as infile:
-                                outfile.write(infile.read())
-                            outfile.write("\n\n")
-
-            self.output.delete(1.0, tk.END)
-            self.output.insert(tk.END, f"Merged files saved to {output_file}")
-        except Exception as e:
-            self.output.delete(1.0, tk.END)
-            self.output.insert(tk.END, f"Error merging files: {str(e)}")
-
     # 0921-2-4
     def merge_files(self):
         selected_extensions = self.get_selected_extensions()
@@ -221,11 +188,11 @@ class CMDPowerShellGUI:
         except Exception as e:
             self.output.delete(1.0, tk.END)
             self.output.insert(tk.END, f"파일 병합 중 오류 발생: {str(e)}")
- 
-    # 0921-2-5###
+
+    # 0921-2-5
     def write_directory_content(self, directory, outfile, selected_extensions, merge_extensions, exclude_files,
                                 encoding, level=0):
-        outfile.write(f"{'#' * (level + 1)} 디렉토리: {directory}\n")
+        outfile.write(f"{'#'} 디렉토리: {directory}\n")
 
         for entry in sorted(os.scandir(directory), key=lambda e: (not e.is_dir(), e.name.lower())):
             if entry.is_dir():
@@ -235,21 +202,22 @@ class CMDPowerShellGUI:
                 _, ext = os.path.splitext(entry.name)
                 if selected_extensions is None or ext in selected_extensions:
                     if entry.name not in exclude_files:
-                        outfile.write(f"{'#' * (level + 2)} 파일: {entry.path}\n")
+                        outfile.write(f"{'##'} 파일: {entry.path}\n")
                         if ext in merge_extensions:
                             outfile.write(f"```{ext[1:]}\n")  # 확장자 표시
                             with open(entry.path, 'r', encoding=encoding) as infile:
                                 outfile.write(infile.read())
                             outfile.write("\n```\n")
                     else:
-                        outfile.write(f"{'#' * (level + 2)} 파일 (내용 생략됨): {entry.path}\n")
+                        outfile.write(f"{'##'} 파일 (내용 생략됨): {entry.path}\n")
 
         outfile.write("\n")
 
-    def exclude_pattern(self):
-        pattern = "test"  # 이 패턴을 사용자 입력으로 변경할 수 있습니다.
-        command = f'powershell "Get-ChildItem -Path \'{self.folder_path.get()}\' -Recurse | Where-Object {{ $_.Name -notmatch \'{pattern}\' }} | Select-Object FullName"'
-        self.run_command(command)
+    # 0921-4-2 주석처리 및 삭제
+    # def exclude_pattern(self):
+    #     pattern = "test"  # 이 패턴을 사용자 입력으로 변경할 수 있습니다.
+    #     command = f'powershell "Get-ChildItem -Path \'{self.folder_path.get()}\' -Recurse | Where-Object {{ $_.Name -notmatch \'{pattern}\' }} | Select-Object FullName"'
+    #     self.run_command(command)
 
 
 if __name__ == "__main__":
