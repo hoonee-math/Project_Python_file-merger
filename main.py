@@ -3,6 +3,7 @@ from tkinter import filedialog, scrolledtext, messagebox, ttk
 import subprocess
 import os
 import platform  # 0921-5-3
+from datetime import datetime #0921-6-1
 
 class CMDPowerShellGUI:
     def __init__(self, master):
@@ -189,7 +190,13 @@ class CMDPowerShellGUI:
             messagebox.showwarning("경고", "병합할 파일 확장자를 선택해주세요.")
             return
 
-        output_file = os.path.join(self.folder_path.get(), "merged_files.txt")
+        # 0921-6-2 저장할 파일 명 변경을 위해 추가
+        now = datetime.now()    #0921-6-3 현재 날짜
+        date_time = now.strftime("%y%m%d-%H%M") #0921-6-4 시간
+        folder_name = os.path.basename(self.folder_path.get())  #0921-6-5 선택된 폴더 이름 추출
+        file_name = f"{date_time}-{folder_name}-merged.md" #0921-6-6 새로운 파일 이름 생성
+
+        output_file = os.path.join(self.folder_path.get(), file_name)
         encoding = 'utf-8'
 
         try:
@@ -206,7 +213,7 @@ class CMDPowerShellGUI:
     # 0921-2-5
     def write_directory_content(self, directory, outfile, selected_extensions, merge_extensions, exclude_files,
                                 encoding, level=0):
-        outfile.write(f"{'#'} 디렉토리: {directory}\n")
+        outfile.write(f"{'#'} 디렉토리: {directory}\n\n")
 
         for entry in sorted(os.scandir(directory), key=lambda e: (not e.is_dir(), e.name.lower())):
             if entry.is_dir():
@@ -221,9 +228,9 @@ class CMDPowerShellGUI:
                             outfile.write(f"```{ext[1:]}\n")  # 확장자 표시
                             with open(entry.path, 'r', encoding=encoding) as infile:
                                 outfile.write(infile.read())
-                            outfile.write("\n```\n")
+                            outfile.write("\n```\n\n")
                     else:
-                        outfile.write(f"{'##'} 파일 (내용 생략됨): {entry.path}\n")
+                        outfile.write(f"{'##'} 파일 (내용 생략됨): {entry.path}\n\n")
 
         outfile.write("\n")
 
