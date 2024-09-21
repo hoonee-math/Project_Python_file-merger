@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, scrolledtext, messagebox, ttk
 import subprocess
 import os
-
+import platform  # 0921-5-3
 
 class CMDPowerShellGUI:
     def __init__(self, master):
@@ -18,6 +18,7 @@ class CMDPowerShellGUI:
         tk.Label(folder_frame, text="폴더 경로:").pack(side=tk.LEFT)
         tk.Entry(folder_frame, textvariable=self.folder_path, width=50).pack(side=tk.LEFT)
         tk.Button(folder_frame, text="폴더 선택", command=self.select_folder).pack(side=tk.LEFT)
+        tk.Button(folder_frame, text="폴더 열기", command=self.open_folder).pack(side=tk.LEFT)  # 0921-5-1
 
         # 명령어 버튼 프레임
         button_frame = tk.Frame(master)
@@ -64,6 +65,19 @@ class CMDPowerShellGUI:
         folder = filedialog.askdirectory()
         if folder:
             self.folder_path.set(folder)
+
+    # 0921-5-2
+    def open_folder(self):
+        folder = self.folder_path.get()
+        if folder and os.path.exists(folder):
+            if platform.system() == "Windows":
+                os.startfile(folder)
+            elif platform.system() == "Darwin":  # macOS
+                subprocess.Popen(["open", folder])
+            else:  # Linux and other Unix-like
+                subprocess.Popen(["xdg-open", folder])
+        else:
+            messagebox.showerror("오류", "유효한 폴더를 선택해주세요.")
 
     def run_command(self, command):
         # 주어진 명령어를 실행하고 결과를 출력 영역에 표시
