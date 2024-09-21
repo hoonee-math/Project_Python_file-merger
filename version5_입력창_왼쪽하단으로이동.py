@@ -10,7 +10,7 @@ class CMDPowerShellGUI:
     def __init__(self, master):
         self.master = master
         master.title("File Manager without CMD")
-        master.geometry("1200x800")
+        master.geometry("900x600")
         master.configure(bg="#f0f0f0")
 
         self.style = ttk.Style()
@@ -40,30 +40,17 @@ class CMDPowerShellGUI:
         ttk.Button(folder_frame, text="폴더 열기", command=self.open_folder).pack(side=tk.LEFT, padx=(10, 0))
 
         # 하단 프레임 (왼쪽 컨트롤 + 오른쪽 출력)
-        # bottom_frame = ttk.Frame(main_frame)
-        # bottom_frame.pack(fill=tk.BOTH, expand=True)
         bottom_frame = ttk.Frame(main_frame)
         bottom_frame.pack(fill=tk.BOTH, expand=True)
         bottom_frame.columnconfigure(1, weight=1)  # 오른쪽 열에 가중치 부여
-        bottom_frame.rowconfigure(0, weight=1)  # 행에 가중치 부여
-
 
         # 왼쪽 프레임 (버튼 + 입력)
-        # left_frame = ttk.Frame(bottom_frame, padding="10")
-        # left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        left_frame = ttk.Frame(bottom_frame, padding="10", width=300)  # 너비 고정
-        left_frame.grid(row=0, column=0, sticky="nsew")
-        left_frame.grid_propagate(False)  # 크기 고정
-
-        # 왼쪽 프레임 내용 설정
-        left_frame.columnconfigure(0, weight=1)  # 내부 위젯들이 가로로 확장되도록 설정
-        left_frame.rowconfigure(1, weight=1)  # 입력 영역이 세로로 확장되도록 설정
+        left_frame = ttk.Frame(bottom_frame, padding="10")
+        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # 버튼 영역
-        # button_frame = ttk.Frame(left_frame)
-        # button_frame.pack(fill=tk.X, pady=(0, 20))
         button_frame = ttk.Frame(left_frame)
-        button_frame.grid(row=0, column=0, sticky="ew")
+        button_frame.pack(fill=tk.X, pady=(0, 20))
 
         ttk.Label(button_frame, text="기본 구조 출력", anchor="w").pack(fill=tk.X, pady=(0, 5))
         commands = [
@@ -77,10 +64,8 @@ class CMDPowerShellGUI:
             ttk.Button(button_frame, text=text, command=command).pack(fill=tk.X, pady=(0, 5))
 
         # 입력 영역
-        # input_frame = ttk.Frame(left_frame)
-        # input_frame.pack(fill=tk.X, pady=(0, 20))
         input_frame = ttk.Frame(left_frame)
-        input_frame.grid(row=1, column=0, sticky="nsew")
+        input_frame.pack(fill=tk.X, pady=(0, 20))
 
         ttk.Label(input_frame, text="커스텀 출력시 출력할 확장자:").pack(anchor='w')
         self.extensions_entry = ttk.Entry(input_frame)
@@ -99,10 +84,8 @@ class CMDPowerShellGUI:
         ttk.Button(input_frame, text="파일 병합", command=self.merge_files).pack(fill=tk.X)
 
         # 오른쪽 프레임 (결과 출력)
-        # right_frame = ttk.Frame(bottom_frame, padding="10")
-        # right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         right_frame = ttk.Frame(bottom_frame, padding="10")
-        right_frame.grid(row=0, column=1, sticky="nsew")
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
         # 결과 출력 영역
         self.output = scrolledtext.ScrolledText(right_frame, wrap=tk.WORD)

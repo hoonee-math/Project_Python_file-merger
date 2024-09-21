@@ -3,14 +3,71 @@ from tkinter import filedialog, scrolledtext, messagebox, ttk
 import subprocess
 import os
 import platform  # 0921-5-3
-from datetime import datetime #0921-6-1
+from datetime import datetime  # 0921-6-1
+
 
 class CMDPowerShellGUI:
+    # 0921-7-1 새로운 ui 적용을 위해 삭제
+    # def __init__(self, master):
+    #     self.master = master
+    #     master.title("CMD & PowerShell GUI")
+    #     master.geometry("800x600")
+    #
+    #     # 폴더 선택 프레임
+    #     folder_frame = tk.Frame(master)
+    #     folder_frame.pack(pady=10)
+    #
+    #     self.folder_path = tk.StringVar()
+    #     tk.Label(folder_frame, text="폴더 경로:").pack(side=tk.LEFT)
+    #     tk.Entry(folder_frame, textvariable=self.folder_path, width=50).pack(side=tk.LEFT)
+    #     tk.Button(folder_frame, text="폴더 선택", command=self.select_folder).pack(side=tk.LEFT)
+    #     tk.Button(folder_frame, text="폴더 열기", command=self.open_folder).pack(side=tk.LEFT)  # 0921-5-1
+    #
+    #     # 명령어 버튼 프레임
+    #     button_frame = tk.Frame(master)
+    #     button_frame.pack(pady=10)
+    #
+    #     commands = [
+    #         ("파일 트리 구조 출력 (PowerShell)", self.ps_tree),
+    #         ("파일 트리 구조 출력 (CMD)", self.cmd_tree),
+    #         ("파일 트리 구조 출력 (커스텀 PowerShell)", self.ps_tree_extensions),
+    #         ("파일 트리 구조 출력 (커스텀 CMD)", self.custom_tree),  # 새로운 버튼 추가
+    #         # ("특정 패턴 제외 파일 찾기", self.exclude_pattern)    # 0921-4-1 주석처리 및 삭제
+    #     ]
+    #
+    #     # 커스텀 트리 출력시 선택한 확장자만 출력되도록 변경 0921-1-1
+    #     tk.Label(master, text="커스텀 출력시 출력할 확장자 (쉼표로 구분, 예: .py .txt .java)").pack(pady=(20,0))
+    #     self.extensions_entry = tk.Entry(master, width=50)
+    #     self.extensions_entry.pack(pady=(0,20))
+    #
+    #     # 병합할 파일 확장자 선택 # 0921-2-1
+    #     self.merge_extensions = tk.StringVar()
+    #     tk.Label(master, text="병합할 파일 확장자 (쉼표로 구분, 예: .java, .py):").pack()
+    #     self.merge_extensions_entry = tk.Entry(master, textvariable=self.merge_extensions, width=50)
+    #     self.merge_extensions_entry.pack(pady=(0,20))
+    #
+    #     # 제외할 파일 선택# 0921-2-1
+    #     self.exclude_files = tk.StringVar()
+    #     tk.Label(master, text="병합에서 제외할 파일 (쉼표로 구분):").pack()
+    #     self.exclude_files_entry = tk.Entry(master, textvariable=self.exclude_files, width=50)
+    #     self.exclude_files_entry.pack(pady=(0,20))
+    #
+    #     # 병합 버튼 추가# 0921-2-1
+    #     tk.Button(master, text="파일 병합", command=self.merge_files).pack(pady=10)
+    #
+    #
+    #     for text, command in commands:
+    #         tk.Button(button_frame, text=text, command=command).pack(fill=tk.X)
+    #
+    #     # 결과 출력 영역
+    #     self.output = scrolledtext.ScrolledText(master, wrap=tk.WORD)
+    #     self.output.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+
     # 0921-7-2 새로운 ui 적용을 위해 추가
     def __init__(self, master):
         self.master = master
-        master.title("File Manager without CMD")
-        master.geometry("1200x800")
+        master.title("Modern File Manager")
+        master.geometry("900x600")
         master.configure(bg="#f0f0f0")
 
         self.style = ttk.Style()
@@ -25,11 +82,12 @@ class CMDPowerShellGUI:
 
         self.create_widgets()
 
+    # 0921-7-3 새로운 ui 적용을 위해 추가
     def create_widgets(self):
-        main_frame = ttk.Frame(self.master, padding="20")
+        main_frame = ttk.Frame(self.master, padding="20 20 20 0")
         main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # 폴더 선택 프레임 (최상단)
+        # 폴더 선택 프레임
         folder_frame = ttk.Frame(main_frame, padding="10")
         folder_frame.pack(fill=tk.X, pady=(0, 20))
 
@@ -39,33 +97,14 @@ class CMDPowerShellGUI:
         ttk.Button(folder_frame, text="폴더 선택", command=self.select_folder).pack(side=tk.LEFT)
         ttk.Button(folder_frame, text="폴더 열기", command=self.open_folder).pack(side=tk.LEFT, padx=(10, 0))
 
-        # 하단 프레임 (왼쪽 컨트롤 + 오른쪽 출력)
-        # bottom_frame = ttk.Frame(main_frame)
-        # bottom_frame.pack(fill=tk.BOTH, expand=True)
+        # 하단 프레임 (명령어 버튼 + 입력 영역 + 결과 출력)
         bottom_frame = ttk.Frame(main_frame)
         bottom_frame.pack(fill=tk.BOTH, expand=True)
-        bottom_frame.columnconfigure(1, weight=1)  # 오른쪽 열에 가중치 부여
-        bottom_frame.rowconfigure(0, weight=1)  # 행에 가중치 부여
 
+        # 명령어 버튼 프레임
+        button_frame = ttk.Frame(bottom_frame, padding="0 0 20 0")
+        button_frame.pack(side=tk.LEFT, fill=tk.Y)
 
-        # 왼쪽 프레임 (버튼 + 입력)
-        # left_frame = ttk.Frame(bottom_frame, padding="10")
-        # left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        left_frame = ttk.Frame(bottom_frame, padding="10", width=300)  # 너비 고정
-        left_frame.grid(row=0, column=0, sticky="nsew")
-        left_frame.grid_propagate(False)  # 크기 고정
-
-        # 왼쪽 프레임 내용 설정
-        left_frame.columnconfigure(0, weight=1)  # 내부 위젯들이 가로로 확장되도록 설정
-        left_frame.rowconfigure(1, weight=1)  # 입력 영역이 세로로 확장되도록 설정
-
-        # 버튼 영역
-        # button_frame = ttk.Frame(left_frame)
-        # button_frame.pack(fill=tk.X, pady=(0, 20))
-        button_frame = ttk.Frame(left_frame)
-        button_frame.grid(row=0, column=0, sticky="ew")
-
-        ttk.Label(button_frame, text="기본 구조 출력", anchor="w").pack(fill=tk.X, pady=(0, 5))
         commands = [
             ("파일 트리 구조 출력 (PowerShell)", self.ps_tree),
             ("파일 트리 구조 출력 (CMD)", self.cmd_tree),
@@ -74,40 +113,35 @@ class CMDPowerShellGUI:
         ]
 
         for text, command in commands:
-            ttk.Button(button_frame, text=text, command=command).pack(fill=tk.X, pady=(0, 5))
+            ttk.Button(button_frame, text=text, command=command, width=25).pack(pady=(0, 10))
+
+        # 입력 및 결과 프레임
+        input_output_frame = ttk.Frame(bottom_frame)
+        input_output_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # 입력 영역
-        # input_frame = ttk.Frame(left_frame)
-        # input_frame.pack(fill=tk.X, pady=(0, 20))
-        input_frame = ttk.Frame(left_frame)
-        input_frame.grid(row=1, column=0, sticky="nsew")
+        input_frame = ttk.Frame(input_output_frame)
+        input_frame.pack(fill=tk.X, pady=(0, 20))
 
         ttk.Label(input_frame, text="커스텀 출력시 출력할 확장자:").pack(anchor='w')
-        self.extensions_entry = ttk.Entry(input_frame)
+        self.extensions_entry = ttk.Entry(input_frame, width=50)
         self.extensions_entry.pack(fill=tk.X, pady=(0, 10))
 
         ttk.Label(input_frame, text="병합할 파일 확장자:").pack(anchor='w')
         self.merge_extensions = tk.StringVar()
-        self.merge_extensions_entry = ttk.Entry(input_frame, textvariable=self.merge_extensions)
+        self.merge_extensions_entry = ttk.Entry(input_frame, textvariable=self.merge_extensions, width=50)
         self.merge_extensions_entry.pack(fill=tk.X, pady=(0, 10))
 
         ttk.Label(input_frame, text="병합에서 제외할 파일:").pack(anchor='w')
         self.exclude_files = tk.StringVar()
-        self.exclude_files_entry = ttk.Entry(input_frame, textvariable=self.exclude_files)
+        self.exclude_files_entry = ttk.Entry(input_frame, textvariable=self.exclude_files, width=50)
         self.exclude_files_entry.pack(fill=tk.X, pady=(0, 10))
 
-        ttk.Button(input_frame, text="파일 병합", command=self.merge_files).pack(fill=tk.X)
-
-        # 오른쪽 프레임 (결과 출력)
-        # right_frame = ttk.Frame(bottom_frame, padding="10")
-        # right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
-        right_frame = ttk.Frame(bottom_frame, padding="10")
-        right_frame.grid(row=0, column=1, sticky="nsew")
+        ttk.Button(input_frame, text="파일 병합", command=self.merge_files).pack(anchor='w')
 
         # 결과 출력 영역
-        self.output = scrolledtext.ScrolledText(right_frame, wrap=tk.WORD)
+        self.output = scrolledtext.ScrolledText(input_output_frame, wrap=tk.WORD, height=15)
         self.output.pack(fill=tk.BOTH, expand=True)
-
 
     def select_folder(self):
         # 폴더 선택 다이얼로그 표시
@@ -239,10 +273,10 @@ class CMDPowerShellGUI:
             return
 
         # 0921-6-2 저장할 파일 명 변경을 위해 추가
-        now = datetime.now()    #0921-6-3 현재 날짜
-        date_time = now.strftime("%y%m%d-%H%M") #0921-6-4 시간
-        folder_name = os.path.basename(self.folder_path.get())  #0921-6-5 선택된 폴더 이름 추출
-        file_name = f"{date_time}-{folder_name}-merged.md" #0921-6-6 새로운 파일 이름 생성
+        now = datetime.now()  # 0921-6-3 현재 날짜
+        date_time = now.strftime("%y%m%d-%H%M")  # 0921-6-4 시간
+        folder_name = os.path.basename(self.folder_path.get())  # 0921-6-5 선택된 폴더 이름 추출
+        file_name = f"{date_time}-{folder_name}-merged.md"  # 0921-6-6 새로운 파일 이름 생성
 
         output_file = os.path.join(self.folder_path.get(), file_name)
         encoding = 'utf-8'
