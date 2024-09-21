@@ -6,60 +6,85 @@ import platform  # 0921-5-3
 from datetime import datetime #0921-6-1
 
 class CMDPowerShellGUI:
+    # 0921-7-2 새로운 ui 적용을 위해 추가
     def __init__(self, master):
         self.master = master
-        master.title("CMD & PowerShell GUI")
-        master.geometry("800x600")
+        master.title("Modern File Manager")
+        master.geometry("900x600")
+        master.configure(bg="#f0f0f0")
+
+        self.style = ttk.Style()
+        self.style.theme_use('clam')
+
+        # 색상 설정
+        self.style.configure('TFrame', background='#f0f0f0')
+        self.style.configure('TButton', background='#4a86e8', foreground='white', font=('Helvetica', 10))
+        self.style.map('TButton', background=[('active', '#619ff0')])
+        self.style.configure('TLabel', background='#f0f0f0', font=('Helvetica', 10))
+        self.style.configure('TEntry', font=('Helvetica', 10))
+
+        self.create_widgets()
+
+    # 0921-7-3 새로운 ui 적용을 위해 추가
+    def create_widgets(self):
+        main_frame = ttk.Frame(self.master, padding="20 20 20 0")
+        main_frame.pack(fill=tk.BOTH, expand=True)
 
         # 폴더 선택 프레임
-        folder_frame = tk.Frame(master)
-        folder_frame.pack(pady=10)
+        folder_frame = ttk.Frame(main_frame, padding="10")
+        folder_frame.pack(fill=tk.X, pady=(0, 20))
 
         self.folder_path = tk.StringVar()
-        tk.Label(folder_frame, text="폴더 경로:").pack(side=tk.LEFT)
-        tk.Entry(folder_frame, textvariable=self.folder_path, width=50).pack(side=tk.LEFT)
-        tk.Button(folder_frame, text="폴더 선택", command=self.select_folder).pack(side=tk.LEFT)
-        tk.Button(folder_frame, text="폴더 열기", command=self.open_folder).pack(side=tk.LEFT)  # 0921-5-1
+        ttk.Label(folder_frame, text="폴더 경로:").pack(side=tk.LEFT)
+        ttk.Entry(folder_frame, textvariable=self.folder_path, width=50).pack(side=tk.LEFT, padx=(5, 10))
+        ttk.Button(folder_frame, text="폴더 선택", command=self.select_folder).pack(side=tk.LEFT)
+        ttk.Button(folder_frame, text="폴더 열기", command=self.open_folder).pack(side=tk.LEFT, padx=(10, 0))
+
+        # 하단 프레임 (명령어 버튼 + 입력 영역 + 결과 출력)
+        bottom_frame = ttk.Frame(main_frame)
+        bottom_frame.pack(fill=tk.BOTH, expand=True)
 
         # 명령어 버튼 프레임
-        button_frame = tk.Frame(master)
-        button_frame.pack(pady=10)
+        button_frame = ttk.Frame(bottom_frame, padding="0 0 20 0")
+        button_frame.pack(side=tk.LEFT, fill=tk.Y)
 
         commands = [
             ("파일 트리 구조 출력 (PowerShell)", self.ps_tree),
             ("파일 트리 구조 출력 (CMD)", self.cmd_tree),
             ("파일 트리 구조 출력 (커스텀 PowerShell)", self.ps_tree_extensions),
-            ("파일 트리 구조 출력 (커스텀 CMD)", self.custom_tree),  # 새로운 버튼 추가
-            # ("특정 패턴 제외 파일 찾기", self.exclude_pattern)    # 0921-4-1 주석처리 및 삭제
+            ("파일 트리 구조 출력 (커스텀 CMD)", self.custom_tree),
         ]
 
-        # 커스텀 트리 출력시 선택한 확장자만 출력되도록 변경 0921-1-1
-        self.extensions_entry = tk.Entry(master, width=50)
-        self.extensions_entry.pack(pady=5)
-        tk.Label(master, text="커스텀 출력시 출력할 확장자 (쉼표로 구분, 예: .py .txt .java)").pack()
-
-        # 병합할 파일 확장자 선택 # 0921-2-1
-        self.merge_extensions = tk.StringVar()
-        tk.Label(master, text="병합할 파일 확장자 (쉼표로 구분, 예: .java, .py):").pack()
-        self.merge_extensions_entry = tk.Entry(master, textvariable=self.merge_extensions, width=50)
-        self.merge_extensions_entry.pack(pady=5)
-
-        # 제외할 파일 선택# 0921-2-1
-        self.exclude_files = tk.StringVar()
-        tk.Label(master, text="병합에서 제외할 파일 (쉼표로 구분):").pack()
-        self.exclude_files_entry = tk.Entry(master, textvariable=self.exclude_files, width=50)
-        self.exclude_files_entry.pack(pady=5)
-
-        # 병합 버튼 추가# 0921-2-1
-        tk.Button(master, text="파일 병합", command=self.merge_files).pack(pady=10)
-
-
         for text, command in commands:
-            tk.Button(button_frame, text=text, command=command).pack(fill=tk.X)
+            ttk.Button(button_frame, text=text, command=command, width=25).pack(pady=(0, 10))
+
+        # 입력 및 결과 프레임
+        input_output_frame = ttk.Frame(bottom_frame)
+        input_output_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # 입력 영역
+        input_frame = ttk.Frame(input_output_frame)
+        input_frame.pack(fill=tk.X, pady=(0, 20))
+
+        ttk.Label(input_frame, text="커스텀 출력시 출력할 확장자:").pack(anchor='w')
+        self.extensions_entry = ttk.Entry(input_frame, width=50)
+        self.extensions_entry.pack(fill=tk.X, pady=(0, 10))
+
+        ttk.Label(input_frame, text="병합할 파일 확장자:").pack(anchor='w')
+        self.merge_extensions = tk.StringVar()
+        self.merge_extensions_entry = ttk.Entry(input_frame, textvariable=self.merge_extensions, width=50)
+        self.merge_extensions_entry.pack(fill=tk.X, pady=(0, 10))
+
+        ttk.Label(input_frame, text="병합에서 제외할 파일:").pack(anchor='w')
+        self.exclude_files = tk.StringVar()
+        self.exclude_files_entry = ttk.Entry(input_frame, textvariable=self.exclude_files, width=50)
+        self.exclude_files_entry.pack(fill=tk.X, pady=(0, 10))
+
+        ttk.Button(input_frame, text="파일 병합", command=self.merge_files).pack(anchor='w')
 
         # 결과 출력 영역
-        self.output = scrolledtext.ScrolledText(master, wrap=tk.WORD)
-        self.output.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+        self.output = scrolledtext.ScrolledText(input_output_frame, wrap=tk.WORD, height=15)
+        self.output.pack(fill=tk.BOTH, expand=True)
 
     def select_folder(self):
         # 폴더 선택 다이얼로그 표시
