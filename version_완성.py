@@ -49,6 +49,8 @@ class CMDPowerShellGUI:
         ttk.Button(folder_frame, text="폴더 열기", command=self.open_folder).pack(side=tk.LEFT, padx=(10, 0))
 
         # 하단 프레임 (왼쪽 컨트롤 + 오른쪽 출력)
+        # bottom_frame = ttk.Frame(main_frame)
+        # bottom_frame.pack(fill=tk.BOTH, expand=True)
         bottom_frame = ttk.Frame(main_frame)
         bottom_frame.pack(fill=tk.BOTH, expand=True)
         bottom_frame.columnconfigure(1, weight=1)  # 오른쪽 열에 가중치 부여
@@ -56,6 +58,8 @@ class CMDPowerShellGUI:
 
 
         # 왼쪽 프레임 (버튼 + 입력)
+        # left_frame = ttk.Frame(bottom_frame, padding="10")
+        # left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         left_frame = ttk.Frame(bottom_frame, padding="10", width=250)  # 너비 고정
         left_frame.grid(row=0, column=0, sticky="nsew")
         left_frame.grid_propagate(False)  # 크기 고정
@@ -67,6 +71,8 @@ class CMDPowerShellGUI:
         left_frame.rowconfigure(2, weight=0)  # 파일 병합 버튼
 
         # 버튼 영역
+        # button_frame = ttk.Frame(left_frame)
+        # button_frame.pack(fill=tk.X, pady=(0, 20))
         button_frame = ttk.Frame(left_frame)
         button_frame.grid(row=0, column=0, sticky="ew")
 
@@ -99,9 +105,12 @@ class CMDPowerShellGUI:
         self.checkbox_frame.pack(fill=tk.BOTH, expand=True)
 
         self.checkbox_canvas = tk.Canvas(self.checkbox_frame)  # 0922-3-2 확장자 종류 수에 따른 동적인 스크롤 적용, 높이 제한 height=200 삭제
+        # self.checkbox_frame = ttk.Frame(self.checkbox_canvas)  # 0922-3-3 scrollable_frame 으로 대체
         self.checkbox_scrollbar = ttk.Scrollbar(self.checkbox_frame, orient="vertical", command=self.checkbox_canvas.yview)
         self.scrollable_frame = ttk.Frame(self.checkbox_canvas)  # 0922-3-4 scrollable_frame 으로 대체
 
+        # self.checkbox_canvas.pack(side="left", fill="both", expand=True)  # 0922-3-5 scrollable_frame 으로 대체
+        # self.checkbox_scrollbar.pack(side="right", fill="y")  # 0922-3-5 scrollable_frame 으로 대체
         self.scrollable_frame.bind(  # 0922-3-6 scrollable_frame bind
             "<Configure>",
             lambda e: self.checkbox_canvas.configure(
@@ -112,11 +121,20 @@ class CMDPowerShellGUI:
         self.checkbox_canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")  # 0922-3-7 scrollable_frame 으로 대체
         self.checkbox_canvas.configure(yscrollcommand=self.checkbox_scrollbar.set)
 
+        # self.checkbox_frame.bind("<Configure>", lambda e: self.checkbox_canvas.configure(
+        #     scrollregion=self.checkbox_canvas.bbox("all")))
         #  0922-3-8 마우스 휠 이벤트 바인딩
         self.checkbox_canvas.bind("<MouseWheel>", self._on_mousewheel)
 
         self.checkbox_canvas.pack(side="left", fill="both", expand=True)#  0922-3-9
         self.checkbox_scrollbar.pack(side="right", fill="y")#  0922-3-10
+
+        # 0922-2-7 병합할 파일 확장자를 get_selected_extensions 에서 받아서 사용하도록 수정, 버튼 삭제
+        # # 병합할 파일 확장자 (기존 코드 유지)
+        # ttk.Label(input_frame, text="병합할 파일 확장자:").pack(anchor='w')
+        # self.merge_extensions = tk.StringVar()
+        # self.merge_extensions_entry = ttk.Entry(input_frame, textvariable=self.merge_extensions)
+        # self.merge_extensions_entry.pack(fill=tk.X, pady=(0, 10))
 
         # 병합에서 제외할 파일/폴더 프레임
         exclude_frame = ttk.Frame(input_frame)
@@ -140,6 +158,8 @@ class CMDPowerShellGUI:
         self.merge_button.grid(row=2, column=0, sticky="ew", pady=(5, 0))
 
         # 오른쪽 프레임 (결과 출력)
+        # right_frame = ttk.Frame(bottom_frame, padding="10")
+        # right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         right_frame = ttk.Frame(bottom_frame, padding="10")
         right_frame.grid(row=0, column=1, sticky="nsew")
 
@@ -245,6 +265,13 @@ class CMDPowerShellGUI:
 
     # 0921-1-2 커스텀 트리 출력시 출력할 확장자를 입력받아서 리스트에 저장
     def get_selected_extensions(self):
+        # 0922-2-5 get_selected_extensions 함수 전체 수정
+        # # 이 부분은 GUI에서 선택된 확장자를 반환하도록 구현해야 합니다.
+        # extensions = self.extensions_entry.get().strip()
+        # if not extensions:
+        #     return None  # 입력이 없으면 모든 파일 표시
+        # return [ext.strip() for ext in extensions.split(' ') if ext.strip()]
+
         # 0922-2-6 get_selected_extensions 새로운 코드, 체크된 확장자만 반환
         return [ext for ext, var in self.extension_vars.items() if var.get()]
 
