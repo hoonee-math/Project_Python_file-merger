@@ -31,7 +31,7 @@ class CMDPowerShellGUI:
 
         # 폴더 선택 프레임 (최상단)
         folder_frame = ttk.Frame(main_frame, padding="10")
-        folder_frame.pack(fill=tk.X, pady=(0, 20))
+        folder_frame.pack(fill=tk.X, pady=(0, 0))
 
         self.folder_path = tk.StringVar()
         ttk.Label(folder_frame, text="폴더 경로:").pack(side=tk.LEFT)
@@ -58,6 +58,7 @@ class CMDPowerShellGUI:
         # 왼쪽 프레임 내용 설정
         left_frame.columnconfigure(0, weight=1)  # 내부 위젯들이 가로로 확장되도록 설정
         left_frame.rowconfigure(1, weight=1)  # 입력 영역이 세로로 확장되도록 설정
+        left_frame.rowconfigure(2, weight=0)  # 0922-1-1 파일 병합 버튼을 위한 행 추가
 
         # 버튼 영역
         # button_frame = ttk.Frame(left_frame)
@@ -69,6 +70,14 @@ class CMDPowerShellGUI:
         commands = [
             ("파일 트리 구조 출력 (PowerShell)", self.ps_tree),
             ("파일 트리 구조 출력 (CMD)", self.cmd_tree),
+        ]
+
+        # 0922-1-3 커스텀 구조 출력 문구 추가를 위해 삽입
+        for text, command in commands:
+            ttk.Button(button_frame, text=text, command=command).pack(fill=tk.X, pady=(0, 5))
+
+        ttk.Label(button_frame, text="커스텀 구조 출력", anchor="w").pack(fill=tk.X, pady=(10, 5))
+        commands = [
             ("파일 트리 구조 출력 (커스텀 PowerShell)", self.ps_tree_extensions),
             ("파일 트리 구조 출력 (커스텀 CMD)", self.custom_tree),
         ]
@@ -82,21 +91,38 @@ class CMDPowerShellGUI:
         input_frame = ttk.Frame(left_frame)
         input_frame.grid(row=1, column=0, sticky="nsew")
 
-        ttk.Label(input_frame, text="커스텀 출력시 출력할 확장자:").pack(anchor='w')
-        self.extensions_entry = ttk.Entry(input_frame)
-        self.extensions_entry.pack(fill=tk.X, pady=(0, 10))
+        # 0922-2-1 스크롤 가능한 체크박스 프레임 checkbox_canvas
+        ttk.Label(input_frame, text="파일 확장자 선택:").pack(anchor='w', pady=(10, 5))
+        checkbox_frame = ttk.Frame(input_frame)
+        checkbox_frame.pack(fill=tk.BOTH, expand=True)
 
-        ttk.Label(input_frame, text="병합할 파일 확장자:").pack(anchor='w')
-        self.merge_extensions = tk.StringVar()
-        self.merge_extensions_entry = ttk.Entry(input_frame, textvariable=self.merge_extensions)
-        self.merge_extensions_entry.pack(fill=tk.X, pady=(0, 10))
+        self.checkbox_canvas = tk.Canvas(checkbox_frame, height=200)  # 높이 제한
+        self.checkbox_frame = ttk.Frame(self.checkbox_canvas)
+        self.checkbox_scrollbar = ttk.Scrollbar(checkbox_frame, orient="vertical", command=self.checkbox_canvas.yview)
 
-        ttk.Label(input_frame, text="병합에서 제외할 파일:").pack(anchor='w')
+        self.checkbox_canvas.pack(side="left", fill="both", expand=True)
+        self.checkbox_scrollbar.pack(side="right", fill="y")
+
+        self.checkbox_canvas.create_window((0, 0), window=self.checkbox_frame, anchor="nw")
+        self.checkbox_canvas.configure(yscrollcommand=self.checkbox_scrollbar.set)
+
+        self.checkbox_frame.bind("<Configure>", lambda e: self.checkbox_canvas.configure(
+            scrollregion=self.checkbox_canvas.bbox("all")))
+
+        # 0922-2-7 병합할 파일 확장자를 get_selected_extensions 에서 받아서 사용하도록 수정, 버튼 삭제
+        # # 병합할 파일 확장자 (기존 코드 유지)
+        # ttk.Label(input_frame, text="병합할 파일 확장자:").pack(anchor='w')
+        # self.merge_extensions = tk.StringVar()
+        # self.merge_extensions_entry = ttk.Entry(input_frame, textvariable=self.merge_extensions)
+        # self.merge_extensions_entry.pack(fill=tk.X, pady=(0, 10))
+
+        # 병합에서 제외할 파일 (기존 코드 유지)
+        ttk.Label(input_frame, text="병합에서 제외할 파일:").pack(anchor='w', pady=(10, 5)) # 0922-2-8 여백 설정
         self.exclude_files = tk.StringVar()
         self.exclude_files_entry = ttk.Entry(input_frame, textvariable=self.exclude_files)
         self.exclude_files_entry.pack(fill=tk.X, pady=(0, 10))
 
-        ttk.Button(input_frame, text="파일 병합", command=self.merge_files).pack(fill=tk.X)
+        ttk.Button(left_frame, text="파일 병합", command=self.merge_files).grid(row=2, column=0, sticky="ew", pady=(10, 0))
 
         # 오른쪽 프레임 (결과 출력)
         # right_frame = ttk.Frame(bottom_frame, padding="10")
@@ -114,6 +140,42 @@ class CMDPowerShellGUI:
         folder = filedialog.askdirectory()
         if folder:
             self.folder_path.set(folder)
+            self.analyze_folder_extensions(folder)  # 0922-2-2
+
+    # 0922-2-3 analyze_folder_extensions 추가, 폴더 선택 시 동적으로 체크박스를 생성
+    def analyze_folder_extensions(self, folder):
+        extensions = set()
+        has_no_extension = False
+
+        for root, _, files in os.walk(folder):
+            for file in files:
+                _, ext = os.path.splitext(file)
+                if ext:
+                    extensions.add(ext)
+                else:
+                    has_no_extension = True
+
+        self.create_extension_checkboxes(sorted(extensions), has_no_extension)
+
+    # 0922-2-4 create_extension_checkboxes 추가, 폴더 선택 시 동적으로 체크박스를 생성
+    def create_extension_checkboxes(self, extensions, has_no_extension):
+        for widget in self.checkbox_frame.winfo_children():
+            widget.destroy()
+
+        self.extension_vars = {}
+
+        for ext in extensions:
+            var = tk.BooleanVar(value=True)
+            self.extension_vars[ext] = var
+            ttk.Checkbutton(self.checkbox_frame, text=ext, variable=var).pack(anchor="w")
+
+        if has_no_extension:
+            var = tk.BooleanVar(value=True)
+            self.extension_vars["No Extension"] = var
+            ttk.Checkbutton(self.checkbox_frame, text="확장자 없는 파일", variable=var).pack(anchor="w")
+
+        self.checkbox_canvas.update_idletasks()
+        self.checkbox_canvas.configure(scrollregion=self.checkbox_canvas.bbox("all"))
 
     # 0921-5-2
     def open_folder(self):
@@ -142,11 +204,16 @@ class CMDPowerShellGUI:
 
     # 0921-1-2 커스텀 트리 출력시 출력할 확장자를 입력받아서 리스트에 저장
     def get_selected_extensions(self):
-        # 이 부분은 GUI에서 선택된 확장자를 반환하도록 구현해야 합니다.
-        extensions = self.extensions_entry.get().strip()
-        if not extensions:
-            return None  # 입력이 없으면 모든 파일 표시
-        return [ext.strip() for ext in extensions.split(' ') if ext.strip()]
+        # 0922-2-5 get_selected_extensions 함수 전체 수정
+        # # 이 부분은 GUI에서 선택된 확장자를 반환하도록 구현해야 합니다.
+        # extensions = self.extensions_entry.get().strip()
+        # if not extensions:
+        #     return None  # 입력이 없으면 모든 파일 표시
+        # return [ext.strip() for ext in extensions.split(' ') if ext.strip()]
+
+        # 0922-2-6 get_selected_extensions 새로운 코드, 체크된 확장자만 반환
+        return [ext for ext, var in self.extension_vars.items() if var.get()]
+
 
     # 0921-2-2
     def get_merge_extensions(self):
@@ -231,10 +298,10 @@ class CMDPowerShellGUI:
     # 0921-2-4
     def merge_files(self):
         selected_extensions = self.get_selected_extensions()
-        merge_extensions = self.get_merge_extensions()
+        # merge_extensions = self.get_merge_extensions()    # 0922-2-9 selected_extensions 만 사용하여 merege 진행
         exclude_files = self.get_exclude_files()
 
-        if not merge_extensions:
+        if not selected_extensions: # 0922-2-10
             messagebox.showwarning("경고", "병합할 파일 확장자를 선택해주세요.")
             return
 
@@ -249,8 +316,8 @@ class CMDPowerShellGUI:
 
         try:
             with open(output_file, 'w', encoding=encoding) as outfile:
-                self.write_directory_content(self.folder_path.get(), outfile, selected_extensions, merge_extensions,
-                                             exclude_files, encoding)
+                # self.write_directory_content(self.folder_path.get(), outfile, selected_extensions, merge_extensions, exclude_files, encoding)
+                self.write_directory_content(self.folder_path.get(), outfile, selected_extensions, exclude_files, encoding) # 0922-2-11 merge_extensions 삭제
 
             self.output.delete(1.0, tk.END)
             self.output.insert(tk.END, f"병합된 파일이 {output_file}에 저장되었습니다.")
@@ -259,24 +326,29 @@ class CMDPowerShellGUI:
             self.output.insert(tk.END, f"파일 병합 중 오류 발생: {str(e)}")
 
     # 0921-2-5
-    def write_directory_content(self, directory, outfile, selected_extensions, merge_extensions, exclude_files,
-                                encoding, level=0):
+    def write_directory_content(self, directory, outfile, selected_extensions, exclude_files, encoding, level=0): # 0922-2-12 merge_extensions 삭제
         outfile.write(f"{'#'} 디렉토리: {directory}\n\n")
 
         for entry in sorted(os.scandir(directory), key=lambda e: (not e.is_dir(), e.name.lower())):
             if entry.is_dir():
-                self.write_directory_content(entry.path, outfile, selected_extensions, merge_extensions, exclude_files,
-                                             encoding, level + 1)
+                self.write_directory_content(entry.path, outfile, selected_extensions, exclude_files, encoding, level + 1)
             elif entry.is_file():
                 _, ext = os.path.splitext(entry.name)
-                if selected_extensions is None or ext in selected_extensions:
-                    if entry.name not in exclude_files:
+                # if selected_extensions is None or ext in selected_extensions: # 0922-2-13 삭제
+                if ext in selected_extensions:                                  # 0922-2-14 추가
+                    # if entry.name not in exclude_files:
+                    #     outfile.write(f"{'##'} 파일: {entry.path}\n")
+                    #     if ext in selected_extensions:
+                    #         outfile.write(f"```{ext[1:]}\n")  # 확장자 표시
+                    #         with open(entry.path, 'r', encoding=encoding) as infile:
+                    #             outfile.write(infile.read())
+                    #         outfile.write("\n```\n\n")
+                    if entry.name not in exclude_files:                         # 0922-2-15 조건문 수정됨
                         outfile.write(f"{'##'} 파일: {entry.path}\n")
-                        if ext in merge_extensions:
-                            outfile.write(f"```{ext[1:]}\n")  # 확장자 표시
-                            with open(entry.path, 'r', encoding=encoding) as infile:
-                                outfile.write(infile.read())
-                            outfile.write("\n```\n\n")
+                        outfile.write(f"```{ext[1:]}\n")  # 확장자 표시
+                        with open(entry.path, 'r', encoding=encoding) as infile:
+                            outfile.write(infile.read())
+                        outfile.write("\n```\n\n")
                     else:
                         outfile.write(f"{'##'} 파일 (내용 생략됨): {entry.path}\n\n")
 
