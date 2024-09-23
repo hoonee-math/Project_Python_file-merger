@@ -10,7 +10,7 @@ class CMDPowerShellGUI:
     # 0921-7-2 새로운 ui 적용을 위해 추가
     def __init__(self, master):
         self.master = master
-        master.title("File Manager without CMD")
+        master.title("File Manager without CMD v1.0")
         master.geometry("1200x800")
         master.configure(bg="#f0f0f0")
 
@@ -445,7 +445,7 @@ class CMDPowerShellGUI:
         self.status_left = ttk.Label(self.status_bar, anchor=tk.W)
         self.status_left.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        self.status_right = ttk.Label(self.status_bar, text="제작자: hoonee-math", anchor=tk.E)
+        self.status_right = ttk.Label(self.status_bar, text="GitHub: hoonee-math", anchor=tk.E)
         self.status_right.pack(side=tk.RIGHT)
 
         self.update_status()
