@@ -1,1 +1,4 @@
 .idea/
+build/
+internal포함 실행파일/
+dist/
