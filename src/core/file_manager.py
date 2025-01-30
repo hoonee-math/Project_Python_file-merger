@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Set, List, Tuple, Optional
 import os
-from src.utilis.helpers import normalize_path, get_file_extension
+from src.utils.helpers import normalize_path, get_file_extension
 from .gitignore_parser import GitignoreParser
 
 

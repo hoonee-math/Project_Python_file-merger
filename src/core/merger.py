@@ -3,7 +3,7 @@ from typing import List, Optional, TextIO
 from datetime import datetime
 import os
 from src.core.file_manager import FileManager
-from src.utilis.helpers import normalize_path, get_file_extension
+from src.utils.helpers import normalize_path, get_file_extension
 
 
 class FileMerger:

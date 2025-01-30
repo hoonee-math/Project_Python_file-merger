@@ -1,148 +1,207 @@
 import tkinter as tk
 from tkinter import ttk, scrolledtext
-from typing import Callable, List
-import subprocess
+from typing import List, Optional
 from src.core.tree_generator import TreeGenerator
+from src.core.command_executor import CommandExecutor
 
 
 class FileTreeFrame(ttk.Frame):
     """파일 트리 표시 및 제어를 위한 프레임 클래스"""
 
     def __init__(self, master):
+        """초기화
+
+        Args:
+            master: 부모 위젯
+        """
         super().__init__(master, padding="10")
 
-        # 트리 생성기 (초기값 None)
-        self.tree_generator: TreeGenerator = None
+        # 핵심 컴포넌트 (초기값 None)
+        self._tree_generator: Optional[TreeGenerator] = None
+        self._command_executor: Optional[CommandExecutor] = None
 
+        # UI 초기화
         self._create_widgets()
+        self._setup_layout()
 
-    def _create_widgets(self):
-        """위젯 생성 및 배치"""
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
-
-        # 버튼 영역
-        button_frame = ttk.Frame(self)
-        button_frame.grid(row=0, column=0, sticky="ew")
-
-        # 기본 구조 출력 섹션
-        ttk.Label(button_frame, text="기본 구조 출력", anchor="w").pack(
-            fill=tk.X, pady=(0, 5))
-
-        commands = [
-            ("파일 트리 리스트", self.ps_tree),
-            ("파일 트리 그래프", self.cmd_tree),
-        ]
-
-        for text, command in commands:
-            ttk.Button(button_frame, text=text, command=command).pack(
-                fill=tk.X, pady=(0, 5))
-
-        # 커스텀 구조 출력 섹션
-        ttk.Label(button_frame, text="커스텀 구조 출력", anchor="w").pack(
-            fill=tk.X, pady=(10, 5))
-
-        commands = [
-            ("파일 트리 리스트 (커스텀)", self.ps_tree_extensions),
-            ("파일 트리 그래프 (커스텀)", self.custom_tree),
-        ]
-
-        for text, command in commands:
-            ttk.Button(button_frame, text=text, command=command).pack(
-                fill=tk.X, pady=(0, 5))
-
-        # 출력 영역
-        self.output = scrolledtext.ScrolledText(self, wrap=tk.WORD)
-        self.output.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
-
-    def initialize(self, root_path: str):
-        """트리 생성기 초기화
+    def initialize(self, root_path: str) -> None:
+        """트리 생성기와 명령어 실행기 초기화
 
         Args:
             root_path (str): 루트 디렉토리 경로
         """
-        self.tree_generator = TreeGenerator(root_path)
+        try:
+            self._tree_generator = TreeGenerator(root_path)
+            self._command_executor = CommandExecutor(root_path)
+        except Exception as e:
+            self._show_error(f"초기화 중 오류 발생: {str(e)}")
 
-    def clear_output(self):
+    def _create_widgets(self) -> None:
+        """위젯 생성"""
+        # 버튼 영역
+        self._button_frame = ttk.Frame(self)
+
+        # 기본 구조 섹션
+        ttk.Label(self._button_frame, text="기본 구조 출력", anchor="w").pack(
+            fill=tk.X, pady=(0, 5))
+
+        self._create_command_buttons()
+
+        # 출력 영역
+        self.output = scrolledtext.ScrolledText(self, wrap=tk.WORD)
+
+    def _setup_layout(self) -> None:
+        """레이아웃 설정"""
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+
+        self._button_frame.grid(row=0, column=0, sticky="ew")
+        self.output.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
+
+    def _create_command_buttons(self) -> None:
+        """명령어 버튼 생성"""
+        # 기본 구조 버튼
+        commands = [
+            ("파일 트리 리스트", self._ps_tree),
+            ("파일 트리 그래프", self._cmd_tree),
+        ]
+
+        for text, command in commands:
+            ttk.Button(self._button_frame, text=text, command=command).pack(
+                fill=tk.X, pady=(0, 5))
+
+        # 커스텀 구조 섹션
+        ttk.Label(self._button_frame, text="커스텀 구조 출력", anchor="w").pack(
+            fill=tk.X, pady=(10, 5))
+
+        commands = [
+            ("파일 트리 리스트 (커스텀)", self._ps_tree_extensions),
+            ("파일 트리 그래프 (커스텀)", self._custom_tree),
+        ]
+
+        for text, command in commands:
+            ttk.Button(self._button_frame, text=text, command=command).pack(
+                fill=tk.X, pady=(0, 5))
+
+    def _clear_output(self) -> None:
         """출력 영역 초기화"""
         self.output.delete(1.0, tk.END)
 
-    def update_output(self, text: str):
-        """출력 영역 업데이트
+    def _show_output(self, text: str) -> None:
+        """출력 영역에 텍스트 표시
 
         Args:
             text (str): 표시할 텍스트
         """
-        self.clear_output()
+        self._clear_output()
         self.output.insert(tk.END, text)
 
-    def run_command(self, command: str):
-        """시스템 명령어 실행
+    def _show_error(self, error_message: str) -> None:
+        """에러 메시지 표시
 
         Args:
-            command (str): 실행할 명령어
+            error_message (str): 에러 메시지
         """
-        try:
-            result = subprocess.run(
-                command,
-                capture_output=True,
-                text=True,
-                shell=True
-            )
-            self.clear_output()
-            self.output.insert(tk.END, result.stdout)
-            if result.stderr:
-                self.output.insert(tk.END, f"\nErrors:\n{result.stderr}")
-        except Exception as e:
-            self.clear_output()
-            self.output.insert(tk.END, f"Error: {str(e)}")
+        self._clear_output()
+        self.output.insert(tk.END, f"Error: {error_message}")
 
-    def cmd_tree(self):
+    def _check_initialization(self) -> bool:
+        """초기화 상태 확인
+
+        Returns:
+            bool: 초기화 완료 여부
+        """
+        if not self._tree_generator or not self._command_executor:
+            self._show_error("폴더를 선택해주세요.")
+            return False
+        return True
+
+    def _cmd_tree(self) -> None:
         """CMD tree 명령어로 트리 구조 출력"""
-        if not self.tree_generator:
+        if not self._check_initialization():
             return
-        command = f'tree "{self.tree_generator.root_path}" /F'
-        self.run_command(command)
 
-    def ps_tree(self):
+        try:
+            stdout, stderr = self._command_executor.cmd_tree()
+            if stderr:
+                self._show_error(stderr)
+            else:
+                self._show_output(stdout)
+        except Exception as e:
+            self._show_error(str(e))
+
+    def _ps_tree(self) -> None:
         """PowerShell로 트리 구조 출력"""
-        if not self.tree_generator:
+        if not self._check_initialization():
             return
-        command = f'powershell "Get-ChildItem -Path \'{self.tree_generator.root_path}\' -Recurse | Select-Object FullName"'
-        self.run_command(command)
 
-    def ps_tree_extensions(self, extensions: List[str] = None):
+        try:
+            stdout, stderr = self._command_executor.ps_tree()
+            if stderr:
+                self._show_error(stderr)
+            else:
+                self._show_output(stdout)
+        except Exception as e:
+            self._show_error(str(e))
+
+    def _ps_tree_extensions(self, extensions: Optional[List[str]] = None) -> None:
         """PowerShell로 선택된 확장자의 파일만 출력
 
         Args:
-            extensions (List[str], optional): 표시할 확장자 목록. Defaults to None.
+            extensions (Optional[List[str]], optional): 표시할 확장자 목록.
         """
-        if not self.tree_generator:
+        if not self._check_initialization():
             return
 
-        if not extensions:
-            self.ps_tree()
-            return
+        try:
+            stdout, stderr = self._command_executor.ps_tree_extensions(extensions)
+            if stderr:
+                self._show_error(stderr)
+            else:
+                self._show_output(stdout)
+        except Exception as e:
+            self._show_error(str(e))
 
-        extension_filter = ','.join(f'*{ext}' for ext in extensions)
-        command = f'powershell "Get-ChildItem -Path \'{self.tree_generator.root_path}\' -Recurse -Include {extension_filter} | Select-Object FullName"'
-        self.run_command(command)
-
-    def custom_tree(self, allowed_extensions: List[str] = None, exclude_files: List[str] = None,
-                    exclude_folders: List[str] = None):
+    def _custom_tree(self, allowed_extensions: Optional[List[str]] = None,
+                     exclude_files: Optional[List[str]] = None,
+                     exclude_folders: Optional[List[str]] = None) -> None:
         """커스텀 트리 구조 출력
 
         Args:
-            allowed_extensions (List[str], optional): 표시할 확장자 목록. Defaults to None.
-            exclude_files (List[str], optional): 제외할 파일 목록. Defaults to None.
-            exclude_folders (List[str], optional): 제외할 폴더 목록. Defaults to None.
+            allowed_extensions (Optional[List[str]], optional): 표시할 확장자 목록
+            exclude_files (Optional[List[str]], optional): 제외할 파일 목록
+            exclude_folders (Optional[List[str]], optional): 제외할 폴더 목록
         """
-        if not self.tree_generator:
+        if not self._check_initialization():
             return
 
-        tree = self.tree_generator.generate_ascii_tree(
-            allowed_extensions,
-            exclude_files,
-            exclude_folders
-        )
-        self.update_output(tree)
+        try:
+            tree = self._tree_generator.generate_ascii_tree(
+                allowed_extensions,
+                exclude_files,
+                exclude_folders
+            )
+            self._show_output(tree)
+        except Exception as e:
+            self._show_error(str(e))
+
+    # Public Interface Methods
+    def update_output(self, text: str) -> None:
+        """출력 영역 업데이트 (공개 메서드)
+
+        Args:
+            text (str): 표시할 텍스트
+        """
+        self._show_output(text)
+
+    def custom_tree(self, allowed_extensions: Optional[List[str]] = None,
+                    exclude_files: Optional[List[str]] = None,
+                    exclude_folders: Optional[List[str]] = None) -> None:
+        """커스텀 트리 구조 출력 (공개 메서드)
+
+        Args:
+            allowed_extensions (Optional[List[str]], optional): 표시할 확장자 목록
+            exclude_files (Optional[List[str]], optional): 제외할 파일 목록
+            exclude_folders (Optional[List[str]], optional): 제외할 폴더 목록
+        """
+        self._custom_tree(allowed_extensions, exclude_files, exclude_folders)
