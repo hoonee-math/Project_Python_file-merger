@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 from datetime import datetime
 from pathlib import Path
 
+from tkinter import ttk, scrolledtext
 from src.core.file_manager import FileManager
 from src.core.merger import FileMerger
 from src.gui.widgets.folder_frame import FolderFrame
@@ -77,24 +78,30 @@ class MainWindow:
         bottom_frame.rowconfigure(0, weight=1)
 
         # 왼쪽 프레임
-        left_frame = ttk.Frame(bottom_frame, padding="10", width=250)
+        left_frame = ttk.Frame(bottom_frame, width=250)
         left_frame.grid(row=0, column=0, sticky="nsew")
         left_frame.grid_propagate(False)
 
-        # 왼쪽 프레임 내부 설정
-        left_frame.columnconfigure(0, weight=1)
-        left_frame.rowconfigure(1, weight=1)
+        # 오른쪽 출력 영역을 먼저 생성
+        self.output_frame = ttk.Frame(bottom_frame)
+        self.output_frame.grid(row=0, column=1, sticky="nsew", padx=(10, 0))
+        self.output = scrolledtext.ScrolledText(self.output_frame, wrap=tk.WORD)
+        self.output.pack(fill=tk.BOTH, expand=True)
 
-        # 확장자 선택 프레임
+        # 트리 버튼 영역 (output 전달)
+        self.file_tree = FileTreeFrame(left_frame, self.output)
+        self.file_tree.pack(fill=tk.X, pady=(0, 10))
+
+        # 확장자 선택 영역
         self.extensions_frame = ExtensionsFrame(
             left_frame,
             self._on_extension_selection_change
         )
-        self.extensions_frame.grid(row=1, column=0, sticky="nsew")
+        self.extensions_frame.pack(fill=tk.BOTH, expand=True)
 
-        # 제외 설정 프레임
+        # 제외 설정 영역
         self.exclude_frame = ExcludeFrame(left_frame)
-        self.exclude_frame.grid(row=2, column=0, sticky="ew")
+        self.exclude_frame.pack(fill=tk.X)
 
         # 병합 버튼
         self.merge_button = ttk.Button(
@@ -102,11 +109,7 @@ class MainWindow:
             text="파일 병합",
             command=self._merge_files
         )
-        self.merge_button.grid(row=3, column=0, sticky="ew", pady=(5, 0))
-
-        # 오른쪽 프레임 (파일 트리)
-        self.file_tree = FileTreeFrame(bottom_frame)
-        self.file_tree.grid(row=0, column=1, sticky="nsew")
+        self.merge_button.pack(fill=tk.X, pady=(5, 0))
 
     def _on_folder_select(self, folder_path: str):
         """폴더 선택 시 호출되는 콜백

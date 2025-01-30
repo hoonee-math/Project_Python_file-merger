@@ -8,21 +8,22 @@ from src.core.command_executor import CommandExecutor
 class FileTreeFrame(ttk.Frame):
     """파일 트리 표시 및 제어를 위한 프레임 클래스"""
 
-    def __init__(self, master):
+    def __init__(self, master, output):
         """초기화
 
         Args:
             master: 부모 위젯
+            output: 출력 영역 위젯
         """
         super().__init__(master, padding="10")
 
         # 핵심 컴포넌트 (초기값 None)
         self._tree_generator: Optional[TreeGenerator] = None
         self._command_executor: Optional[CommandExecutor] = None
+        self._output = output  # 출력 영역 저장
 
         # UI 초기화
         self._create_widgets()
-        self._setup_layout()
 
     def initialize(self, root_path: str) -> None:
         """트리 생성기와 명령어 실행기 초기화
@@ -38,25 +39,45 @@ class FileTreeFrame(ttk.Frame):
 
     def _create_widgets(self) -> None:
         """위젯 생성"""
-        # 버튼 영역
-        self._button_frame = ttk.Frame(self)
-
         # 기본 구조 섹션
-        ttk.Label(self._button_frame, text="기본 구조 출력", anchor="w").pack(
-            fill=tk.X, pady=(0, 5))
+        ttk.Label(self, text="기본 구조 출력", anchor="w").pack(fill=tk.X, pady=(0, 5))
 
-        self._create_command_buttons()
+        commands = [
+            ("파일 트리 리스트", self._ps_tree),
+            ("파일 트리 그래프", self._cmd_tree),
+        ]
 
-        # 출력 영역
-        self.output = scrolledtext.ScrolledText(self, wrap=tk.WORD)
+        for text, command in commands:
+            ttk.Button(self, text=text, command=command).pack(fill=tk.X, pady=(0, 5))
 
-    def _setup_layout(self) -> None:
-        """레이아웃 설정"""
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
+        # 커스텀 구조 섹션
+        ttk.Label(self, text="커스텀 구조 출력", anchor="w").pack(fill=tk.X, pady=(10, 5))
 
-        self._button_frame.grid(row=0, column=0, sticky="ew")
-        self.output.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
+        commands = [
+            ("파일 트리 리스트 (커스텀)", self._ps_tree_extensions),
+            ("파일 트리 그래프 (커스텀)", self._custom_tree),
+        ]
+
+        for text, command in commands:
+            ttk.Button(self, text=text, command=command).pack(fill=tk.X, pady=(0, 5))
+
+    def _show_output(self, text: str) -> None:
+        """출력 영역에 텍스트 표시
+
+        Args:
+            text (str): 표시할 텍스트
+        """
+        self._output.delete(1.0, tk.END)
+        self._output.insert(tk.END, text)
+
+    def _show_error(self, error_message: str) -> None:
+        """에러 메시지 표시
+
+        Args:
+            error_message (str): 에러 메시지
+        """
+        self._output.delete(1.0, tk.END)
+        self._output.insert(tk.END, f"Error: {error_message}")
 
     def _create_command_buttons(self) -> None:
         """명령어 버튼 생성"""
@@ -85,7 +106,7 @@ class FileTreeFrame(ttk.Frame):
 
     def _clear_output(self) -> None:
         """출력 영역 초기화"""
-        self.output.delete(1.0, tk.END)
+        self._output.delete(1.0, tk.END)
 
     def _show_output(self, text: str) -> None:
         """출력 영역에 텍스트 표시
@@ -94,7 +115,7 @@ class FileTreeFrame(ttk.Frame):
             text (str): 표시할 텍스트
         """
         self._clear_output()
-        self.output.insert(tk.END, text)
+        self._output.insert(tk.END, text)
 
     def _show_error(self, error_message: str) -> None:
         """에러 메시지 표시
@@ -103,7 +124,7 @@ class FileTreeFrame(ttk.Frame):
             error_message (str): 에러 메시지
         """
         self._clear_output()
-        self.output.insert(tk.END, f"Error: {error_message}")
+        self._output.insert(tk.END, f"Error: {error_message}")
 
     def _check_initialization(self) -> bool:
         """초기화 상태 확인
