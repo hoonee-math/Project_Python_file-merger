@@ -1,0 +1,11 @@
+# Basic requirements
+pathlib>=2.3.5
+
+# Development tools
+pyinstaller>=4.5.1  # For creating executable
+black>=21.5b2      # For code formatting
+mypy>=0.910       # For type checking
+pytest>=6.2.5     # For testing
+
+# Optional
+pylint>=2.8.2     # For code quality checking
