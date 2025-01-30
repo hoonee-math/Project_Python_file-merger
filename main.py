@@ -48,6 +48,10 @@ class CMDPowerShellGUI:
         ttk.Button(folder_frame, text="폴더 선택", command=self.select_folder).pack(side=tk.LEFT)
         ttk.Button(folder_frame, text="폴더 열기", command=self.open_folder).pack(side=tk.LEFT, padx=(10, 0))
 
+        # 새로 추가할 링크 버튼들
+        ttk.Button(folder_frame, text="홈페이지 바로가기", command=self.open_website, width=15, style='Small.TButton').pack(side=tk.RIGHT,
+                                                                                                           padx=(10, 2))
+
         # 하단 프레임 (왼쪽 컨트롤 + 오른쪽 출력)
         bottom_frame = ttk.Frame(main_frame)
         bottom_frame.pack(fill=tk.BOTH, expand=True)
@@ -147,6 +151,9 @@ class CMDPowerShellGUI:
         self.output = scrolledtext.ScrolledText(right_frame, wrap=tk.WORD)
         self.output.pack(fill=tk.BOTH, expand=True)  # 하단에 여백 추가
 
+    def open_website(self):
+        import webbrowser
+        webbrowser.open('https://hoonee-math.github.io/web/')
 
     def select_folder(self):
         # 폴더 선택 다이얼로그 표시
