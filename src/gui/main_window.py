@@ -18,7 +18,7 @@ class MainWindow:
 
     def __init__(self, master):
         self.master = master
-        self.master.title("File Manager without CMD v1.0")
+        self.master.title("File Manager without CMD v25.1")
         self.master.geometry("1200x800")
         self.master.configure(bg="#f0f0f0")
 
@@ -149,9 +149,15 @@ class MainWindow:
     def _on_gitignore_toggle(self):
         """gitignore 적용 상태 변경 시 호출"""
         use_gitignore = self.gitignore_var.get()
+
         # 파일 매니저에 상태 전달
         if self.file_manager:
             self.file_manager.set_use_gitignore(use_gitignore)
+
+            # 파일 확장자 목록 업데이트
+            extensions, has_no_extension = self.file_manager.analyze_extensions()
+            self.extensions_frame.update_extensions(extensions, has_no_extension)
+
         # 트리 생성기에 상태 전달
         if self.file_tree:
             self.file_tree.set_use_gitignore(use_gitignore)

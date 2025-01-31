@@ -38,10 +38,8 @@ class CommandExecutor:
 
     def cmd_tree(self) -> tuple[str, str]:
         """CMD tree 명령어로 트리 구조 출력"""
-        # .gitignore 적용된 파일 목록 가져오기
-        file_list = self.file_manager.get_file_list()
-        output = "\n".join([path for path, is_dir in file_list])
-        return output, ""
+        command = f'tree "{self.root_path}" /F'
+        return self.execute_command(command)
 
     def ps_tree(self) -> tuple[str, str]:
         """PowerShell로 트리 구조 출력"""
