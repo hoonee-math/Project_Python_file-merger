@@ -29,7 +29,7 @@ class FileTreeFrame:
             if stderr:
                 self._show_error(stderr)
             else:
-                self._show_output(stdout)
+                self.update_output(stdout)
 
     def cmd_tree(self) -> None:
         """CMD 트리 출력"""
@@ -38,7 +38,7 @@ class FileTreeFrame:
             if stderr:
                 self._show_error(stderr)
             else:
-                self._show_output(stdout)
+                self.update_output(stdout)
 
     def ps_tree_extensions(self, extensions: List[str] = None) -> None:
         """확장자 기반 PowerShell 트리 출력"""
@@ -47,16 +47,16 @@ class FileTreeFrame:
             if stderr:
                 self._show_error(stderr)
             else:
-                self._show_output(stdout)
+                self.update_output(stdout)
 
     def custom_tree(self, allowed_extensions: List[str] = None) -> None:
         """커스텀 트리 출력"""
         if self._tree_generator:
             tree = self._tree_generator.generate_ascii_tree(allowed_extensions)
-            self._show_output(tree)
+            self.update_output(tree)
 
-    def _show_output(self, text: str) -> None:
-        """출력 표시"""
+    def update_output(self, text: str) -> None:
+        """출력 영역 업데이트"""
         self._output.delete(1.0, tk.END)
         self._output.insert(tk.END, text)
 
