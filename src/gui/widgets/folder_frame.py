@@ -1,6 +1,10 @@
+import os
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import webbrowser
+import platform
+import subprocess
+import os
 from typing import Callable, Optional
 from pathlib import Path
 from src.core.command_executor import CommandExecutor
@@ -78,7 +82,6 @@ class FolderFrame(ttk.Frame):
             folder = filedialog.askdirectory()
             if folder:
                 self.folder_path.set(folder)
-                self._command_executor = CommandExecutor(folder)
         except Exception as e:
             messagebox.showerror("오류", f"폴더 선택 중 오류 발생: {str(e)}")
 
@@ -89,13 +92,13 @@ class FolderFrame(ttk.Frame):
             messagebox.showwarning("경고", "폴더를 선택해주세요.")
             return
 
-        if not self._command_executor:
-            self._command_executor = CommandExecutor(folder)
-
         try:
-            success = self._command_executor.open_folder(folder)
-            if not success:
-                messagebox.showerror("오류", "폴더를 열 수 없습니다.")
+            if platform.system() == "Windows":
+                os.startfile(folder)
+            elif platform.system() == "Darwin":  # macOS
+                subprocess.Popen(["open", folder])
+            else:  # Linux and other Unix-like
+                subprocess.Popen(["xdg-open", folder])
         except Exception as e:
             messagebox.showerror("오류", f"폴더를 여는 중 오류 발생: {str(e)}")
 

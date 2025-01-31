@@ -11,7 +11,7 @@ class FileManager:
     def __init__(self, root_path: str):
         self.root_path = Path(root_path)
         self.gitignore_parser = GitignoreParser(root_path)
-        self.use_gitignore = True  # 기본값 True
+        self.use_gitignore = False  # 기본값 False로 변경
 
 
     def set_use_gitignore(self, use_gitignore: bool):

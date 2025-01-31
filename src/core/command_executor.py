@@ -8,9 +8,9 @@ import os
 class CommandExecutor:
     """시스템 명령어 실행을 처리하는 클래스"""
 
-    def __init__(self, root_path: str):
+    def __init__(self, root_path: str, file_manager: FileManager):
         self.root_path = Path(root_path)
-        self.file_manager = FileManager(root_path)  # FileManager 추가
+        self.file_manager = file_manager  # FileManager 추가
 
     def set_use_gitignore(self, use_gitignore: bool):
         """gitignore 규칙 적용 여부 설정"""

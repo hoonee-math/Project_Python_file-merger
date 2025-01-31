@@ -166,11 +166,28 @@ class ExtensionsFrame(ttk.Frame):
             has_no_extension (bool): 확장자 없는 파일 존재 여부
         """
         try:
+            # 이전 선택 상태 저장
+            previous_selections = {
+                ext: var.get()
+                for ext, var in self._extension_vars.items()
+            }
+
+            # 새로운 체크박스 생성
             self._create_checkboxes(extensions, has_no_extension)
             self._update_scrollbar_visibility(len(extensions) + (1 if has_no_extension else 0))
+
+            # 이전 선택 상태 복원 (새로운 확장자는 기본값 False)
+            for ext, var in self._extension_vars.items():
+                if ext in previous_selections:
+                    var.set(previous_selections[ext])
+
+            # 전체 선택/해제 상태 업데이트
+            if self._toggle_var:
+                all_selected = all(var.get() for var in self._extension_vars.values())
+                self._toggle_var.set(all_selected)
+
         except Exception as e:
             messagebox.showerror("오류", f"확장자 목록 업데이트 중 오류 발생: {str(e)}")
-
     def get_selected_extensions(self) -> List[str]:
         """선택된 확장자 목록 반환
 

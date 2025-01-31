@@ -7,9 +7,9 @@ from src.core.file_manager import FileManager
 class TreeGenerator:
     """파일 트리 구조를 생성하는 클래스"""
 
-    def __init__(self, root_path: str):
+    def __init__(self, root_path: str, file_manager: FileManager):
         self.root_path = Path(root_path)
-        self.file_manager = FileManager(root_path)
+        self.file_manager = file_manager
 
     def generate_ascii_tree(self,
                             allowed_extensions: Optional[List[str]] = None,

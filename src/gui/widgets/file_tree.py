@@ -3,6 +3,7 @@ from tkinter import ttk
 from typing import List, Optional
 from src.core.tree_generator import TreeGenerator
 from src.core.command_executor import CommandExecutor
+from src.core.file_manager import FileManager
 
 class FileTreeFrame:
     def __init__(self, output):
@@ -17,10 +18,10 @@ class FileTreeFrame:
         if self._command_executor:
             self._command_executor.set_use_gitignore(use_gitignore)
 
-    def initialize(self, root_path: str) -> None:
+    def initialize(self, root_path: str, file_manager: FileManager) -> None:
         """트리 생성기와 명령어 실행기 초기화"""
-        self._tree_generator = TreeGenerator(root_path)
-        self._command_executor = CommandExecutor(root_path)
+        self._tree_generator = TreeGenerator(root_path, file_manager)
+        self._command_executor = CommandExecutor(root_path, file_manager)
 
     def ps_tree(self) -> None:
         """PowerShell 트리 출력"""

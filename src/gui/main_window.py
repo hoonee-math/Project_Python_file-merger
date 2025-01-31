@@ -118,7 +118,7 @@ class MainWindow:
                    )).pack(fill=tk.X, pady=1)
 
         # .gitignore 토글 체크박스
-        self.gitignore_var = tk.BooleanVar(value=True)  # 기본값 True
+        self.gitignore_var = tk.BooleanVar(value=False)  # 기본값 False로 변경
         ttk.Checkbutton(
             button_frame,
             text=".gitignore 규칙 적용",
@@ -171,22 +171,22 @@ class MainWindow:
         if not folder_path:
             return
 
-        # 파일 관리자 초기화
+        # 하나의 FileManager 인스턴스 생성
         self.file_manager = FileManager(folder_path)
-        self.merger = FileMerger(folder_path)
 
-        # 파일 트리 초기화
-        self.file_tree.initialize(folder_path)
+        # 각 컴포넌트에 동일한 FileManager 전달
+        self.merger = FileMerger(folder_path, self.file_manager)
+        self.file_tree.initialize(folder_path, self.file_manager)
 
         # 제외 프레임 초기화
         self.exclude_frame.set_base_folder(folder_path)
 
-        # 확장자 분석 및 업데이트
+        # gitignore 상태 먼저 설정
+        self._on_gitignore_toggle()
+
+        # 확장자 분석 및 업데이트 (gitignore 상태 적용 후)
         extensions, has_no_extension = self.file_manager.analyze_extensions()
         self.extensions_frame.update_extensions(extensions, has_no_extension)
-
-        # gitignore 상태 설정
-        self._on_gitignore_toggle()
 
         # 상태바 업데이트
         self.status_bar.update_status(folder_path)
