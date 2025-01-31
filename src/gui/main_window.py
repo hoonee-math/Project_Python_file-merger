@@ -74,38 +74,63 @@ class MainWindow:
         # 하단 프레임 (좌우 분할)
         bottom_frame = ttk.Frame(main_frame)
         bottom_frame.pack(fill=tk.BOTH, expand=True)
-        bottom_frame.columnconfigure(1, weight=1)
-        bottom_frame.rowconfigure(0, weight=1)
+        bottom_frame.columnconfigure(1, weight=1)  # 오른쪽 열에 가중치 부여
+        bottom_frame.rowconfigure(0, weight=1)  # 행에 가중치 부여
 
         # 왼쪽 프레임
-        left_frame = ttk.Frame(bottom_frame, width=250)
+        left_frame = ttk.Frame(bottom_frame)
         left_frame.grid(row=0, column=0, sticky="nsew")
-        left_frame.grid_propagate(False)
 
-        # 오른쪽 출력 영역을 먼저 생성
+        # 컨테이너 프레임 (모든 왼쪽 컴포넌트를 포함)
+        container = ttk.Frame(left_frame, width=250)  # 너비 고정
+        container.pack(fill=tk.BOTH, expand=True)
+        container.pack_propagate(False)  # 크기 고정
+
+        # 오른쪽 출력 영역
         self.output_frame = ttk.Frame(bottom_frame)
         self.output_frame.grid(row=0, column=1, sticky="nsew", padx=(10, 0))
         self.output = scrolledtext.ScrolledText(self.output_frame, wrap=tk.WORD)
         self.output.pack(fill=tk.BOTH, expand=True)
 
-        # 트리 버튼 영역 (output 전달)
-        self.file_tree = FileTreeFrame(left_frame, self.output)
-        self.file_tree.pack(fill=tk.X, pady=(0, 10))
+        # 파일 트리 기능 초기화
+        self.file_tree = FileTreeFrame(self.output)
 
-        # 확장자 선택 영역
+        # 버튼 영역
+        button_frame = ttk.Frame(container, padding="0")
+        button_frame.pack(fill=tk.X)
+
+        # 기본 구조 버튼
+        ttk.Label(button_frame, text="기본 구조 출력", anchor="w").pack(fill=tk.X)
+        ttk.Button(button_frame, text="파일 트리 리스트",
+                   command=self.file_tree.ps_tree).pack(fill=tk.X, pady=1)
+        ttk.Button(button_frame, text="파일 트리 그래프",
+                   command=self.file_tree.cmd_tree).pack(fill=tk.X, pady=1)
+
+        # 커스텀 구조 버튼
+        ttk.Label(button_frame, text="커스텀 구조 출력", anchor="w").pack(fill=tk.X, pady=(10, 0))
+        ttk.Button(button_frame, text="파일 트리 리스트 (커스텀)",
+                   command=lambda: self.file_tree.ps_tree_extensions(
+                       self.extensions_frame.get_selected_extensions()
+                   )).pack(fill=tk.X, pady=1)
+        ttk.Button(button_frame, text="파일 트리 그래프 (커스텀)",
+                   command=lambda: self.file_tree.custom_tree(
+                       self.extensions_frame.get_selected_extensions()
+                   )).pack(fill=tk.X, pady=1)
+
+        # Extensions 프레임도 container 안에 배치
         self.extensions_frame = ExtensionsFrame(
-            left_frame,
+            container,
             self._on_extension_selection_change
         )
         self.extensions_frame.pack(fill=tk.BOTH, expand=True)
 
-        # 제외 설정 영역
-        self.exclude_frame = ExcludeFrame(left_frame)
+        # 제외 설정 프레임도 container 안에 배치
+        self.exclude_frame = ExcludeFrame(container)
         self.exclude_frame.pack(fill=tk.X)
 
-        # 병합 버튼
+        # 병합 버튼도 container 안에 배치
         self.merge_button = ttk.Button(
-            left_frame,
+            container,
             text="파일 병합",
             command=self._merge_files
         )
