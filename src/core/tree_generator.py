@@ -90,7 +90,7 @@ class TreeGenerator:
 
             # 디렉토리인 경우 재귀 호출
             if entry.is_dir():
-                new_prefix = prefix + ("    " if is_last_entry else "│   ")
+                new_prefix = prefix + ("   " if is_last_entry else "│  ")
                 yield from self._walk(
                     Path(entry.path),
                     allowed_extensions,
