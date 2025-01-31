@@ -18,7 +18,7 @@ class MainWindow:
 
     def __init__(self, master):
         self.master = master
-        self.master.title("File Manager without CMD v25.1")
+        self.master.title("File Manager without CMD v25.1.1")
         self.master.geometry("1200x800")
         self.master.configure(bg="#f0f0f0")
 

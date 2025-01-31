@@ -1,0 +1,5 @@
+APP_NAME = "File Manager without CMD v25.1.1"
+APP_VERSION = "25.1.1"
+APP_AUTHOR = "hoonee-math"
+APP_WEBSITE = "https://hoonee-math.github.io/web/"
+APP_DESCRIPTION = "파일 시스템 탐색 및 파일 병합 도구"
