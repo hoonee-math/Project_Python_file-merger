@@ -4,13 +4,18 @@ from typing import List, Optional
 from src.core.tree_generator import TreeGenerator
 from src.core.command_executor import CommandExecutor
 
-
-# file_tree.py
 class FileTreeFrame:
     def __init__(self, output):
         self._output = output
         self._tree_generator = None
         self._command_executor = None
+
+    def set_use_gitignore(self, use_gitignore: bool) -> None:
+        """gitignore 규칙 적용 여부 설정"""
+        if self._tree_generator:
+            self._tree_generator.file_manager.set_use_gitignore(use_gitignore)
+        if self._command_executor:
+            self._command_executor.set_use_gitignore(use_gitignore)
 
     def initialize(self, root_path: str) -> None:
         """트리 생성기와 명령어 실행기 초기화"""

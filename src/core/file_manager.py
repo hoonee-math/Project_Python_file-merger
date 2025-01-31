@@ -11,6 +11,15 @@ class FileManager:
     def __init__(self, root_path: str):
         self.root_path = Path(root_path)
         self.gitignore_parser = GitignoreParser(root_path)
+        self.use_gitignore = True  # 기본값 True
+
+
+    def set_use_gitignore(self, use_gitignore: bool):
+        self.use_gitignore = use_gitignore
+
+    def should_ignore(self, path: str) -> bool:
+        """파일/폴더를 무시해야 하는지 확인"""
+        return self.use_gitignore and self.gitignore_parser.should_ignore(path)
 
     def analyze_extensions(self) -> Tuple[Set[str], bool]:
         """디렉토리 내의 모든 파일 확장자를 분석

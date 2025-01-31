@@ -5,7 +5,6 @@ import os
 from src.core.file_manager import FileManager
 from src.utils.helpers import normalize_path, get_file_extension
 
-
 class FileMerger:
     """파일 병합 기능을 처리하는 클래스"""
 
@@ -54,13 +53,13 @@ class FileMerger:
             return None
 
     def _write_directory_content(self,
-                                 directory: Path,
-                                 outfile: TextIO,
-                                 selected_extensions: List[str],
-                                 exclude_files: List[str],
-                                 exclude_folders: List[str],
-                                 encoding: str,
-                                 level: int = 0) -> None:
+                                directory: Path,
+                                outfile: TextIO,
+                                selected_extensions: List[str],
+                                exclude_files: List[str],
+                                exclude_folders: List[str],
+                                encoding: str,
+                                level: int = 0) -> None:
         """디렉토리 내용을 재귀적으로 파일에 기록
 
         Args:
@@ -73,7 +72,7 @@ class FileMerger:
             level (int, optional): 현재 깊이. Defaults to 0.
         """
         # .gitignore 규칙 확인
-        if self.file_manager.gitignore_parser.should_ignore(str(directory)):
+        if self.file_manager.should_ignore(str(directory)):
             return
 
         # 경로 정규화 및 상대 경로 계산
@@ -92,11 +91,11 @@ class FileMerger:
         entries = sorted(os.scandir(directory), key=lambda e: (not e.is_dir(), e.name.lower()))
 
         for entry in entries:
-            normalized_path = normalize_path(entry.path)
-
             # .gitignore 규칙 확인
-            if self.file_manager.gitignore_parser.should_ignore(entry.path):
+            if self.file_manager.should_ignore(entry.path):
                 continue
+
+            normalized_path = normalize_path(entry.path)
 
             if entry.is_dir():
                 # 재귀적으로 하위 디렉토리 처리

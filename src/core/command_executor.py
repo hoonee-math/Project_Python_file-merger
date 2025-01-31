@@ -1,6 +1,7 @@
 import subprocess
 from pathlib import Path
 from typing import Optional, List
+from src.core.file_manager import FileManager
 import platform
 import os
 
@@ -9,6 +10,11 @@ class CommandExecutor:
 
     def __init__(self, root_path: str):
         self.root_path = Path(root_path)
+        self.file_manager = FileManager(root_path)  # FileManager 추가
+
+    def set_use_gitignore(self, use_gitignore: bool):
+        """gitignore 규칙 적용 여부 설정"""
+        self.file_manager.set_use_gitignore(use_gitignore)
 
     def execute_command(self, command: str) -> tuple[str, str]:
         """명령어 실행
@@ -32,29 +38,24 @@ class CommandExecutor:
 
     def cmd_tree(self) -> tuple[str, str]:
         """CMD tree 명령어로 트리 구조 출력"""
-        command = f'tree "{self.root_path}" /F'
-        return self.execute_command(command)
+        # .gitignore 적용된 파일 목록 가져오기
+        file_list = self.file_manager.get_file_list()
+        output = "\n".join([path for path, is_dir in file_list])
+        return output, ""
 
     def ps_tree(self) -> tuple[str, str]:
         """PowerShell로 트리 구조 출력"""
-        command = f'powershell "Get-ChildItem -Path \'{self.root_path}\' -Recurse | Select-Object FullName"'
-        return self.execute_command(command)
+        # .gitignore 적용된 파일 목록 가져오기
+        file_list = self.file_manager.get_file_list()
+        output = "\n".join([path for path, is_dir in file_list])
+        return output, ""
 
     def ps_tree_extensions(self, extensions: Optional[List[str]] = None) -> tuple[str, str]:
-        """PowerShell로 선택된 확장자의 파일만 출력
-
-        Args:
-            extensions (Optional[List[str]], optional): 표시할 확장자 목록. Defaults to None.
-
-        Returns:
-            tuple[str, str]: (표준 출력, 표준 에러)
-        """
-        if not extensions:
-            return self.ps_tree()
-
-        extension_filter = ','.join(f'*{ext}' for ext in extensions)
-        command = f'powershell "Get-ChildItem -Path \'{self.root_path}\' -Recurse -Include {extension_filter} | Select-Object FullName"'
-        return self.execute_command(command)
+        """PowerShell로 선택된 확장자의 파일만 출력"""
+        # .gitignore 적용된 파일 목록 가져오기 (확장자 필터링)
+        file_list = self.file_manager.get_file_list(extensions=extensions)
+        output = "\n".join([path for path, is_dir in file_list])
+        return output, ""
 
     def open_folder(self, folder_path: str) -> bool:
         """폴더를 시스템 파일 탐색기로 열기

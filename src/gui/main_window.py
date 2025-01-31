@@ -117,6 +117,16 @@ class MainWindow:
                        self.extensions_frame.get_selected_extensions()
                    )).pack(fill=tk.X, pady=1)
 
+        # .gitignore 토글 체크박스
+        self.gitignore_var = tk.BooleanVar(value=True)  # 기본값 True
+        ttk.Checkbutton(
+            button_frame,
+            text=".gitignore 규칙 적용",
+            variable=self.gitignore_var,
+            command=self._on_gitignore_toggle,
+            style="Transparent.TCheckbutton"
+        ).pack(fill=tk.X, pady=(5, 0))
+
         # Extensions 프레임도 container 안에 배치
         self.extensions_frame = ExtensionsFrame(
             container,
@@ -135,6 +145,16 @@ class MainWindow:
             command=self._merge_files
         )
         self.merge_button.pack(fill=tk.X, pady=(5, 0))
+
+    def _on_gitignore_toggle(self):
+        """gitignore 적용 상태 변경 시 호출"""
+        use_gitignore = self.gitignore_var.get()
+        # 파일 매니저에 상태 전달
+        if self.file_manager:
+            self.file_manager.set_use_gitignore(use_gitignore)
+        # 트리 생성기에 상태 전달
+        if self.file_tree:
+            self.file_tree.set_use_gitignore(use_gitignore)
 
     def _on_folder_select(self, folder_path: str):
         """폴더 선택 시 호출되는 콜백
@@ -158,6 +178,9 @@ class MainWindow:
         # 확장자 분석 및 업데이트
         extensions, has_no_extension = self.file_manager.analyze_extensions()
         self.extensions_frame.update_extensions(extensions, has_no_extension)
+
+        # gitignore 상태 설정
+        self._on_gitignore_toggle()
 
         # 상태바 업데이트
         self.status_bar.update_status(folder_path)

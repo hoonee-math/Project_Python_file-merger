@@ -2,14 +2,14 @@ from typing import Generator, Optional, List
 from pathlib import Path
 import os
 from .gitignore_parser import GitignoreParser
-
+from src.core.file_manager import FileManager
 
 class TreeGenerator:
     """파일 트리 구조를 생성하는 클래스"""
 
     def __init__(self, root_path: str):
         self.root_path = Path(root_path)
-        self.gitignore_parser = GitignoreParser(root_path)
+        self.file_manager = FileManager(root_path)
 
     def generate_ascii_tree(self,
                             allowed_extensions: Optional[List[str]] = None,
@@ -54,7 +54,7 @@ class TreeGenerator:
             Generator[str, None, None]: 트리 구조의 각 줄
         """
         # .gitignore 규칙 확인
-        if self.gitignore_parser.should_ignore(str(path)):
+        if self.file_manager.should_ignore(str(path)):
             return
 
         # 제외 폴더 확인
@@ -63,9 +63,8 @@ class TreeGenerator:
         if any(str_rel_path.startswith(f) for f in exclude_folders):
             return
 
-        # 항목 필터링 및 정렬
         entries = sorted(os.scandir(path), key=lambda e: (not e.is_dir(), e.name.lower()))
-        entries = [e for e in entries if not self.gitignore_parser.should_ignore(e.path)]
+        entries = [e for e in entries if not self.file_manager.should_ignore(e.path)]
 
         if not entries:
             return
@@ -90,6 +89,7 @@ class TreeGenerator:
 
             # 디렉토리인 경우 재귀 호출
             if entry.is_dir():
+                # 새로운 prefix 계산
                 new_prefix = prefix + ("   " if is_last_entry else "│  ")
                 yield from self._walk(
                     Path(entry.path),
@@ -100,5 +100,6 @@ class TreeGenerator:
                     is_last_entry
                 )
 
+                # 마지막 항목이 아닐 경우 구분선 추가
                 if not is_last_entry:
                     yield prefix + "│"

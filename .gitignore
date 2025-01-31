@@ -2,3 +2,5 @@
 build/
 internal포함 실행파일/
 dist/
+.git/
+.venv/
